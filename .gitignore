@@ -1,3 +1,8 @@
+# Project data and creds files 
+*.xlsx
+creds.ini
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
