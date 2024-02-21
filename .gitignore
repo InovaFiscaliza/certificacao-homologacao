@@ -1,5 +1,6 @@
 # Project data and creds files 
 *.xlsx
+*.csv
 creds.ini
 
 
