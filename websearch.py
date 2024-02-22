@@ -43,8 +43,8 @@ class WebSearchEngine():
             query_raw_results = response.json()
             original_query = query_raw_results['queryContext']['originalQuery']
 
+            query_clean_results = []
             if query_raw_results['rankingResponse'] and 'webPages' in query_raw_results.keys():
-                query_clean_results = []
                 for item in query_raw_results['webPages']['value']:
                     name = item['name']
                     url = item['url']
@@ -83,9 +83,9 @@ class WebSearchEngine():
             query_raw_results = response.json()
             original_query = query_raw_results['queries']['request'][0]['searchTerms']
             totalResults = int(query_raw_results['searchInformation']['totalResults'])
-    
+
+            query_clean_results = []
             if totalResults > 0:
-                query_clean_results = []
                 for item in query_raw_results['items']:
                     name = item['title']
                     url = item['link']
@@ -135,7 +135,6 @@ class WebSearchDataManager():
         if not os.path.exists(dataset_file_name):
             clean_search_results_file = os.path.join(self.datasets_dir,dataset_file_name)
             
-        print(clean_search_results_file)
         if os.path.exists(clean_search_results_file):
             df = pd.read_parquet(clean_search_results_file)
             self.clean_search_results = df.to_dict('records')
@@ -143,7 +142,8 @@ class WebSearchDataManager():
     def save_clean_search_results(self,dataset_file_name='products_search_results.parquet'):
         file_to_save = os.path.join(self.datasets_dir,dataset_file_name)
         df = pd.DataFrame(self.clean_search_results)
-        df = df.drop_duplicates(subset=['search_provider','url'])
+        subset=['search_provider','original_query','url']
+        df = df.drop_duplicates(subset=subset)
         df.to_parquet(file_to_save)
         
     def save_raw_search_results(self,json_search_results):
