@@ -1,7 +1,9 @@
 # Project data and creds files 
 *.xlsx
 *.csv
+*.old
 creds.ini
+datasets/
 
 
 # Byte-compiled / optimized / DLL files
