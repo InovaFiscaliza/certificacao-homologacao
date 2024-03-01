@@ -66,6 +66,10 @@ class WebSearchEngine():
         
             return query_clean_results,query_raw_results
         except Exception as ex:
+            error = response.json()
+            error_code = error['error']['code']
+            error_message = error['error']['message']
+            print(f'Error code: {error_code}\nMessage: {error_message}')
             raise ex
         
     def google_search(self,search_term):
