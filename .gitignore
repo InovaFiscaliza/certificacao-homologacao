@@ -4,6 +4,7 @@
 *.old
 creds.ini
 datasets/
+.virtual_documents/
 
 
 # Byte-compiled / optimized / DLL files
