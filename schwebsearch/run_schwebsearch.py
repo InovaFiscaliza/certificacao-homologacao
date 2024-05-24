@@ -52,6 +52,7 @@ if __name__ == '__main__':
         # 403 Client Error: Quota Exceeded for url
         # 429 Client Error: Too Many Requests for url 
         if response_code in [403, 429]:
+            print('Exiting: search quota exceeded')
             break
                 
     for i, item in enumerate(items_to_search):
@@ -61,6 +62,7 @@ if __name__ == '__main__':
         # 403 Client Error: Quota Exceeded for url
         # 429 Client Error: Too Many Requests for url 
         if response_code in [403, 429]:
+            print('Exiting: search quota exceeded')
             break
         
     search_results_files = list(search_results_folder.glob('*.json'))
