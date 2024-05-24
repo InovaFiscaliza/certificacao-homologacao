@@ -46,13 +46,12 @@ if __name__ == '__main__':
     sch = SCHWebSearch(search_results_folder)
     
     for i, item in enumerate(items_to_search):
-        try:
-            response_code, file_name = sch.google_search(item)
-            if verbose:
-                print(i, response_code, file_name.name)
-        except:
-            continue
-        
+        response_code, file_name = sch.google_search(item)
+        if verbose:
+            print(i, response_code, file_name.name)
+        if response_code == 429:
+            break
+                
     for i, item in enumerate(items_to_search):
         try:
             response_code, file_name = sch.bing_search(item)

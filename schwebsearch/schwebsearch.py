@@ -137,7 +137,8 @@ class SCHWebSearch(object):
             query_raw_results = response.json()
             result_file = self.save_results_file(query_raw_results)
         except Exception as ex:
-            raise ex
+            return response.status_code, None
+    
                 
         return response.status_code, result_file
     
@@ -163,7 +164,7 @@ class SCHWebSearch(object):
             query_raw_results = response.json()
             result_file = self.save_results_file(query_raw_results)
         except Exception as ex:
-            raise ex
+            return response.status_code, None
         
         return response.status_code, result_file
 
