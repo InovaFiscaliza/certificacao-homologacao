@@ -210,10 +210,9 @@ def parse_result_file(file, max_words=25):
                     'Computador': None,
                     'Usuário': None, 
                     'Homologação': None, 
-                    'Atributo': 'WordCloud',
-                    'Valor': '',  
-                    'Situação': -1,
-                    'Buscadora': None}
+                    'Atributo': None,
+                    'Valor': None,  
+                    'Situação': -1}
 
     if isinstance(file, str):
         file = Path(file)
@@ -292,8 +291,7 @@ def parse_result_file(file, max_words=25):
             'Homologação': f'{search_term[:5]}-{search_term[5:7]}-{search_term[-5:]}', 
             'Atributo': 'WordCloud',
             'Valor': wourdCloudInfo_json,  
-            'Situação': situacao,
-            'Buscadora': search_engine}
+            'Situação': situacao}
     
 def save_annotation_file(df, annotation_folder):
 
