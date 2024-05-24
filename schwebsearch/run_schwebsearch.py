@@ -11,7 +11,7 @@ if __name__ == '__main__':
     
     # command line args
     parser = argparse.ArgumentParser(description='Search Certified Products')    
-    parser.add_argument('--total_itens_to_query', type=int, default=2, help='Quantidade de itens para pesquisar')
+    parser.add_argument('--total_itens_to_query', type=int, default=90, help='Quantidade de itens para pesquisar')
     parser.add_argument('--grace_period', type=int, default=180, help='Perído de carência para consultar produtos recém homologados')
     parser.add_argument('--verbose', type=bool, default=False, help='Imprimir os itens pesquisados')
     args = parser.parse_args()
@@ -48,27 +48,29 @@ if __name__ == '__main__':
     for i, item in enumerate(items_to_search):
         response_code, file_name = sch.google_search(item)
         if verbose:
-            print(i, response_code, file_name.name)
+            print(i, response_code, file_name)
         # 403 Client Error: Quota Exceeded for url
         # 429 Client Error: Too Many Requests for url 
         if response_code in [403, 429]:
             print('Exiting: search quota exceeded')
             break
-                
-    for i, item in enumerate(items_to_search):
-        response_code, file_name = sch.bing_search(item)
-        if verbose:
-            print(i, response_code, file_name.name)
-        # 403 Client Error: Quota Exceeded for url
-        # 429 Client Error: Too Many Requests for url 
-        if response_code in [403, 429]:
-            print('Exiting: search quota exceeded')
-            break
+    
+    # disable Bing search: search quota exceeded until 2024-06-24
+    # for i, item in enumerate(items_to_search):
+    #     response_code, file_name = sch.bing_search(item)
+    #     if verbose:
+    #         print(i, response_code, file_name)
+    #     # 403 Client Error: Quota Exceeded for url
+    #     # 429 Client Error: Too Many Requests for url 
+    #     if response_code in [403, 429]:
+    #         print('Exiting: search quota exceeded')
+    #         break
         
     search_results_files = list(search_results_folder.glob('*.json'))
     search_results_files = search_results_files
     
     if verbose:
+        print('Creating annotation file:')
         results = [parse_result_file(file) for file in tqdm(search_results_files)]
     else:
         results = [parse_result_file(file) for file in search_results_files]
