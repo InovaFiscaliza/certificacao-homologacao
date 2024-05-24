@@ -62,7 +62,7 @@ if __name__ == '__main__':
             continue
     
     search_results_files = list(search_results_folder.glob('*.json'))
-    search_results_files = search_results_files[:20]
+    search_results_files = search_results_files
     
     if verbose:
         results = [parse_result_file(file) for file in tqdm(search_results_files)]

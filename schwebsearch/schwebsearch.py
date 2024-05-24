@@ -298,8 +298,6 @@ def save_annotation_file(df, annotation_folder):
     if isinstance(annotation_folder,str):
         annotation_folder = Path(annotation_folder)
 
-    df = df.iloc[:,-1]
-
     annotation_ts = datetime.now().strftime(ANOTATION_FILE_TS_FORMAT)
     annotation_file = f'Annotation_{annotation_ts}.xlsx'
     annotation_file = Path(annotation_folder,annotation_file)
