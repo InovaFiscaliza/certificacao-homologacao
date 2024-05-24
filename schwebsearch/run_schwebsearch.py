@@ -49,17 +49,20 @@ if __name__ == '__main__':
         response_code, file_name = sch.google_search(item)
         if verbose:
             print(i, response_code, file_name.name)
-        if response_code == 429:
+        # 403 Client Error: Quota Exceeded for url
+        # 429 Client Error: Too Many Requests for url 
+        if response_code in [403, 429]:
             break
                 
     for i, item in enumerate(items_to_search):
-        try:
-            response_code, file_name = sch.bing_search(item)
-            if verbose:
-                print(i, response_code, file_name.name)
-        except:
-            continue
-    
+        response_code, file_name = sch.bing_search(item)
+        if verbose:
+            print(i, response_code, file_name.name)
+        # 403 Client Error: Quota Exceeded for url
+        # 429 Client Error: Too Many Requests for url 
+        if response_code in [403, 429]:
+            break
+        
     search_results_files = list(search_results_folder.glob('*.json'))
     search_results_files = search_results_files
     

@@ -138,9 +138,9 @@ class SCHWebSearch(object):
             result_file = self.save_results_file(query_raw_results)
         except Exception as ex:
             return response.status_code, None
-    
                 
         return response.status_code, result_file
+
     
     def bing_search(self, search_term):
         # search params
