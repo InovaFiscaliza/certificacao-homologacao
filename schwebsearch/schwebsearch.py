@@ -58,7 +58,7 @@ def load_sch(sch_database_file,parsed_results_folder=None,grace_period=0):
         results_files = list(Path(parsed_results_folder).glob('*.json'))
         search_history = []
         for file in results_files:
-            search_date, _ , search_term, _ = re.split('[_.]',file.name)
+            search_date, _ , search_term, _, _ = re.split('[_.]',file.name)
             search_date = datetime.strptime(search_date,RESULT_TS_FORMAT).date()
             search_history.append([search_term,search_date])
             
@@ -321,6 +321,7 @@ def parse_result_file(file, parsed_results_folder=None, error_results_folder=Non
             'Atributo': 'WordCloud',
             'Valor': wourdCloudInfo_json,  
             'Situação': situacao}
+
     
 def save_annotation_file(df, annotation_folder):
 
