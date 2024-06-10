@@ -202,7 +202,7 @@ def is_black_listed_site(url,blacklisted_sites=None):
         return False
     
     
-def parse_result_file(file, parsed_results_folder=None, max_words=25):
+def parse_result_file(file, parsed_results_folder=None, error_results_folder=None, max_words=25):
 
     parse_url = lambda url: '.'.join(urlparse(url).netloc.split('.')[-3:])
     search_result_id = str(uuid.uuid4())
@@ -220,8 +220,7 @@ def parse_result_file(file, parsed_results_folder=None, max_words=25):
         file = Path(file)
         
     # check parsed results folder and file
-    # default if parse results folder was declared
-    # otherwise, set default parsed results folder
+    # if parse results folder wasn't declared set default
     if parsed_results_folder is None:
         parsed_results_folder = file.parents[0] / 'parsed_results'
     # create parsed results folder, if it doesn't exists    
@@ -229,6 +228,16 @@ def parse_result_file(file, parsed_results_folder=None, max_words=25):
         parsed_results_folder.mkdir(parents=True, exist_ok=True)
     # set parsed results file
     parsed_file = parsed_results_folder / f'{file.stem}_{search_result_id}{file.suffix}'
+    
+    # check error results folder and file
+    # if parse error folder wasn't declared set default
+    if error_results_folder is None:
+        error_results_folder = file.parents[0] / 'error_results'
+    # create parsed results folder, if it doesn't exists    
+    if not error_results_folder.exists():
+        error_results_folder.mkdir(parents=True, exist_ok=True)
+    # set parsed results file
+    error_file = error_results_folder / f'{file.stem}_{search_result_id}{file.suffix}'
     
     search_date, search_engine, search_term, _ = re.split('[_.]',file.name)
     search_site = None
@@ -239,6 +248,7 @@ def parse_result_file(file, parsed_results_folder=None, max_words=25):
         # move parsed result file
         file.rename(parsed_file)
     except:
+        file.rename(error_file)
         return EMPTY_RESULT
 
     try:
