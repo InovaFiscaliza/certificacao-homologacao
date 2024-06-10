@@ -205,9 +205,9 @@ def is_black_listed_site(url,blacklisted_sites=None):
 def parse_result_file(file, parsed_results_folder=None, max_words=25):
 
     parse_url = lambda url: '.'.join(urlparse(url).netloc.split('.')[-3:])
-    result_id = str(uuid.uuid4())
+    search_result_id = str(uuid.uuid4())
 
-    EMPTY_RESULT = {'ID': None, 
+    EMPTY_RESULT = {'ID': search_result_id, 
                     'DataHora': None,
                     'Computador': None,
                     'Usuário': None, 
@@ -290,7 +290,7 @@ def parse_result_file(file, parsed_results_folder=None, max_words=25):
     
     wourdCloudInfo_json = json.dumps(wourdCloudInfo_dict, ensure_ascii=False)
     
-    return {'ID': result_id,
+    return {'ID': search_result_id,
             'DataHora': datetime.strptime(search_date,RESULT_TS_FORMAT).strftime(ANNOTATION_TS_FORMAT),
             'Computador': os.environ['COMPUTERNAME'],
             'Usuário': os.environ['USERNAME'], 
