@@ -218,6 +218,17 @@ def parse_result_file(file, parsed_results_folder=None, max_words=25):
 
     if isinstance(file, str):
         file = Path(file)
+        
+    # check parsed results folder and file
+    # default if parse results folder was declared
+    # otherwise, set default parsed results folder
+    if parsed_results_folder is None:
+        parsed_results_folder = file.parents[0] / 'parsed_results'
+    # create parsed results folder, if it doesn't exists    
+    if not parsed_results_folder.exists():
+        parsed_results_folder.mkdir(parents=True, exist_ok=True)
+    # set parsed results file
+    parsed_file = parsed_results_folder / f'{file.stem}_{search_result_id}{file.suffix}'
     
     search_date, search_engine, search_term, _ = re.split('[_.]',file.name)
     search_site = None
@@ -225,6 +236,8 @@ def parse_result_file(file, parsed_results_folder=None, max_words=25):
     try:
         with open(file) as f:
             results = json.load(f)
+        # move parsed result file
+        file.rename(parsed_file)
     except:
         return EMPTY_RESULT
 
