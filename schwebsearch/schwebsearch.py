@@ -26,7 +26,7 @@ ANOTATION_FILE_TS_FORMAT = '%Y.%m.%d_T%H.%M.%S'
 
  #%% SCH DATABASE
  
-def load_sch(sch_database_file,search_results_folder=None,grace_period=0):
+def load_sch(sch_database_file,parsed_results_folder=None,grace_period=0):
     
     # load SCH database
     usecols = [0,1,11,12,13,14,15]
@@ -54,8 +54,8 @@ def load_sch(sch_database_file,search_results_folder=None,grace_period=0):
         df_sch = df_sch[df_sch['Data da Homologação']<=certification_date_limit]
 
     # load search history
-    if search_results_folder is not None:
-        results_files = list(Path(search_results_folder).rglob('*.json'))
+    if parsed_results_folder is not None:
+        results_files = list(Path(parsed_results_folder).glob('*.json'))
         search_history = []
         for file in results_files:
             search_date, _ , search_term, _ = re.split('[_.]',file.name)
