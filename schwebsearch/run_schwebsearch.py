@@ -28,6 +28,7 @@ if __name__ == '__main__':
             config.read('websearch_config.ini')
             sch_database_file = Path(config['SCHWEBSEARCH']['sch_database_file'])
             search_results_folder = Path(config['SCHWEBSEARCH']['search_results_folder'])
+            parsed_results_folder = Path(config['SCHWEBSEARCH']['parsed_results_folder'])
             annotation_folder = Path(config['SCHWEBSEARCH']['annotation_folder'])
             print('success.')
         except:
