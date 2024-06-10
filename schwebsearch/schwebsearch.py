@@ -316,6 +316,9 @@ def save_annotation_file(df, annotation_folder):
 
     if isinstance(annotation_folder,str):
         annotation_folder = Path(annotation_folder)
+        
+    if df.empty:
+        return -1
 
     annotation_ts = datetime.now().strftime(ANOTATION_FILE_TS_FORMAT)
     annotation_file = f'Annotation_{annotation_ts}.xlsx'
@@ -328,5 +331,5 @@ def save_annotation_file(df, annotation_folder):
         print(f'Annotation file not saved: {annotation_file}')
         raise ex
 
-    return  
+    return 0 
 
