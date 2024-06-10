@@ -11,7 +11,7 @@ if __name__ == '__main__':
     
     # command line args
     parser = argparse.ArgumentParser(description='Search Certified Products')    
-    parser.add_argument('--total_itens_to_query', type=int, default=90, help='Quantidade de itens para pesquisar')
+    parser.add_argument('--total_itens_to_query', type=int, default=100, help='Quantidade de itens para pesquisar')
     parser.add_argument('--grace_period', type=int, default=180, help='Perído de carência para consultar produtos recém homologados')
     parser.add_argument('--verbose', type=bool, default=False, help='Imprimir os itens pesquisados')
     args = parser.parse_args()
@@ -29,6 +29,7 @@ if __name__ == '__main__':
             sch_database_file = Path(config['SCHWEBSEARCH']['sch_database_file'])
             search_results_folder = Path(config['SCHWEBSEARCH']['search_results_folder'])
             parsed_results_folder = Path(config['SCHWEBSEARCH']['parsed_results_folder'])
+            error_results_folder = Path(config['SCHWEBSEARCH']['error_results_folder'])
             annotation_folder = Path(config['SCHWEBSEARCH']['annotation_folder'])
             print('success.')
         except:
@@ -38,7 +39,7 @@ if __name__ == '__main__':
         print('Config file not found. Execution aborted.')
             
     # load sch database    
-    df_sch = load_sch(sch_database_file,search_results_folder,grace_period=grace_period)    
+    df_sch = load_sch(sch_database_file,parsed_results_folder,grace_period=grace_period)    
     # remove searched items
     df_sch = df_sch[df_sch['Última Pesquisa']==-1]
     # new items to search
@@ -66,20 +67,25 @@ if __name__ == '__main__':
     #     if response_code in [403, 429]:
     #         print('Exiting: search quota exceeded')
     #         break
-        
+           
     search_results_files = list(search_results_folder.glob('*.json'))
-    search_results_files = search_results_files
     
     if verbose:
         print('Creating annotation file:')
-        results = [parse_result_file(file) for file in tqdm(search_results_files)]
+        results = [parse_result_file(file,
+                                     parsed_results_folder=parsed_results_folder,
+                                     error_results_folder=error_results_folder) 
+                   for file in tqdm(search_results_files)]
     else:
-        results = [parse_result_file(file) for file in search_results_files]
+        results = [parse_result_file(file,
+                                     parsed_results_folder=parsed_results_folder,
+                                     error_results_folder=error_results_folder) 
+                   for file in search_results_files]
     
     df_results = pd.DataFrame(results)
-    df_results = df_results[df_results['Situação']==1]
-    
-    save_annotation_file(df_results,annotation_folder)
+    if not df_results.empty:
+        df_results = df_results[df_results['Situação']==1]
+        save_annotation_file(df_results,annotation_folder)
 
     if verbose:
         print('Pressione ENTER para sair...')
