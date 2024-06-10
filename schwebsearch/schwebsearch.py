@@ -170,7 +170,7 @@ class SCHWebSearch(object):
 
 #%% ANNOTATION
 
-def tokenizer(doc,normalize_words=False):
+def tokenizer(doc,normalize_words=True):
 
     stop_words = stopwords.words('portuguese')
     stop_words.extend(stopwords.words('english'))
@@ -181,8 +181,8 @@ def tokenizer(doc,normalize_words=False):
                        'pacote', 'pacotes', 'recurso', 'tamanho', 'ver', 'anatel', 'laranja', '.', '...',
                        'complementares', 'peça'])
 
+    doc = doc.lower()
     if normalize_words:
-        doc = doc.lower()
         doc = normalize('NFKD', doc).encode('ASCII', 'ignore').decode('ASCII')
 
     # CountVectorizer token pattern
@@ -202,9 +202,10 @@ def is_black_listed_site(url,blacklisted_sites=None):
         return False
     
     
-def parse_result_file(file, max_words=25):
+def parse_result_file(file, parsed_results_folder=None, max_words=25):
 
     parse_url = lambda url: '.'.join(urlparse(url).netloc.split('.')[-3:])
+    result_id = str(uuid.uuid4())
 
     EMPTY_RESULT = {'ID': None, 
                     'DataHora': None,
@@ -247,6 +248,8 @@ def parse_result_file(file, max_words=25):
                     lines.append(item['title'])
                     if 'snippet' in item.keys():
                         lines.append(item['snippet'])
+        else:
+            return EMPTY_RESULT
                         
     elif search_engine == 'BING':
         # results without webPages in keys are empty
@@ -260,6 +263,8 @@ def parse_result_file(file, max_words=25):
                     lines.append(item['name'])
                     if 'snippet' in item.keys():
                         lines.append(item['snippet'])
+        else:
+            return EMPTY_RESULT
                  
     if len(lines) >= 1:
         words = tokenizer(' '.join(lines))
@@ -285,7 +290,7 @@ def parse_result_file(file, max_words=25):
     
     wourdCloudInfo_json = json.dumps(wourdCloudInfo_dict, ensure_ascii=False)
     
-    return {'ID': str(uuid.uuid4()),
+    return {'ID': result_id,
             'DataHora': datetime.strptime(search_date,RESULT_TS_FORMAT).strftime(ANNOTATION_TS_FORMAT),
             'Computador': os.environ['COMPUTERNAME'],
             'Usuário': os.environ['USERNAME'], 
