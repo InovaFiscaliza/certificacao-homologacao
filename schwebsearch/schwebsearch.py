@@ -356,24 +356,37 @@ def parse_result_file(file, search_history_folder=None, parse_errors_folder=None
             'Situação': situacao}
 
     
-def save_annotation_file(df, annotation_folder):
+def save_annotation_file(df, annotation_folder, actual_annotation_file=None):
 
     if isinstance(annotation_folder,str):
         annotation_folder = Path(annotation_folder)
         
-    if df.empty:
+    if actual_annotation_file is not None:
+        if isinstance(actual_annotation_file,str):
+            actual_annotation_file = Path(actual_annotation_file)
+        
+        if actual_annotation_file.exists():
+            df_actual_annotation = pd.read_excel(actual_annotation_file)
+            columns_to_keep = ['ID']
+            df_actual_annotation = df_actual_annotation[columns_to_keep]
+            df_actual_annotation.columns = ['actual_ID']
+            df = df.merge(df_actual_annotation,left_on='ID',right_on='actual_ID',how='left')
+            df = df[df['actual_ID'].isna()].iloc[:,:-1]
+            
+    if not df.empty:    
+        annotation_ts = datetime.now().strftime(ANOTATION_FILE_TS_FORMAT)
+        annotation_file = f'Annotation_{annotation_ts}.xlsx'
+        annotation_file = Path(annotation_folder,annotation_file)
+        
+        try:
+            df.to_excel(annotation_file,index=False)
+            print(f'Annotation file saved: {annotation_file}')
+        except Exception as ex:
+            print(f'Annotation file not saved: {annotation_file}')
+            raise ex
+        return 0
+    
+    else:
+        print('No new annotation to save')
         return -1
-
-    annotation_ts = datetime.now().strftime(ANOTATION_FILE_TS_FORMAT)
-    annotation_file = f'Annotation_{annotation_ts}.xlsx'
-    annotation_file = Path(annotation_folder,annotation_file)
-
-    try:
-        df.to_excel(annotation_file,index=False)
-        print(f'Annotation file saved: {annotation_file}')
-    except Exception as ex:
-        print(f'Annotation file not saved: {annotation_file}')
-        raise ex
-
-    return 0 
 
