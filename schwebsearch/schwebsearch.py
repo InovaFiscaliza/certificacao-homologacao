@@ -74,9 +74,9 @@ def load_sch(sch_database_file,search_history_folder=None):
                 search_date, search_engine, search_term, search_id, _ = re.split('[_.]',file.name)
                 search_date = datetime.strptime(search_date,RESULT_TS_FORMAT).date()
                 search_metadata = {'Última Pesquisa': search_date, 
-                                'Mecanismo de Busca': search_engine,
-                                'Id de Busca': search_id, 
-                                'Número de Homologação': search_term}
+                                   'Mecanismo de Busca': search_engine,
+                                   'Id de Busca': search_id, 
+                                   'Número de Homologação': search_term}
                 search_history.append(search_metadata)
             df_search_history = pd.DataFrame(search_history)
             
@@ -227,10 +227,21 @@ def is_black_listed_site(url,blacklisted_sites=None):
         return False
     
     
-def parse_result_file(file, parsed_results_folder=None, error_results_folder=None, max_words=25):
+def parse_result_file(file, search_history_folder=None, parse_errors_folder=None, max_words=25):
 
     parse_url = lambda url: '.'.join(urlparse(url).netloc.split('.')[-3:])
-    search_result_id = str(uuid.uuid4())
+    
+    if isinstance(file, str):
+        file = Path(file)
+    
+    if re.search(UUID4RE,file.name):
+        search_date, search_engine, search_term, search_result_id, _ = re.split('[_.]',file.name)
+        move_file = False
+    else:
+        search_date, search_engine, search_term, _ = re.split('[_.]',file.name)
+        search_result_id = str(uuid.uuid4())
+        move_file = True
+    search_site = None    
 
     EMPTY_RESULT = {'ID': search_result_id, 
                     'DataHora': None,
@@ -239,43 +250,38 @@ def parse_result_file(file, parsed_results_folder=None, error_results_folder=Non
                     'Homologação': None, 
                     'Atributo': None,
                     'Valor': None,  
-                    'Situação': -1}
-
-    if isinstance(file, str):
-        file = Path(file)
+                    'Situação': -1}  
         
     # check parsed results folder and file
     # if parse results folder wasn't declared set default
-    if parsed_results_folder is None:
-        parsed_results_folder = file.parents[0] / 'parsed_results'
+    if search_history_folder is None:
+        search_history_folder = file.parents[0] / 'search_history'
     # create parsed results folder, if it doesn't exists    
-    if not parsed_results_folder.exists():
-        parsed_results_folder.mkdir(parents=True, exist_ok=True)
+    if not search_history_folder.exists():
+        search_history_folder.mkdir(parents=True, exist_ok=True)
     # set parsed results file
-    # parsed_file = parsed_results_folder / f'{file.stem}_{search_result_id}{file.suffix}'
-    parsed_file = parsed_results_folder / file.name
+    parsed_file = search_history_folder / f'{file.stem}_{search_result_id}{file.suffix}'
     
     # check error results folder and file
     # if parse error folder wasn't declared set default
-    if error_results_folder is None:
-        error_results_folder = file.parents[0] / 'error_results'
+    if parse_errors_folder is None:
+        parse_errors_folder = file.parents[0] / 'parse_errors'
     # create parsed results folder, if it doesn't exists    
-    if not error_results_folder.exists():
-        error_results_folder.mkdir(parents=True, exist_ok=True)
+    if not parse_errors_folder.exists():
+        parse_errors_folder.mkdir(parents=True, exist_ok=True)
     # set parsed results file
-    # error_file = error_results_folder / f'{file.stem}_{search_result_id}{file.suffix}'
-    error_file = error_results_folder / file.name
-    
-    search_date, search_engine, search_term, _ = re.split('[_.]',file.name)
-    search_site = None
-    
+    error_file = parse_errors_folder / f'{file.stem}_error{file.suffix}'
+
     try:
         with open(file) as f:
             results = json.load(f)
         # move parsed result file
-        file.rename(parsed_file)
+        # if move_file:
+        #     file.rename(parsed_file)
     except:
-        file.rename(error_file)
+        # move parsed error file
+        # if move_file:
+            # file.rename(error_file)
         return EMPTY_RESULT
 
     try:
@@ -304,7 +310,7 @@ def parse_result_file(file, parsed_results_folder=None, error_results_folder=Non
     elif search_engine == 'BING':
         # results without webPages in keys are empty
         if 'webPages' in results.keys():
-            for item in results['webPages']['value'][:10]:
+            for item in results['webPages']['value']:
                 search_site = item['url']
                 if is_black_listed_site(search_site):
                     continue
