@@ -28,7 +28,7 @@ UUID4RE = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-
 
  #%% SCH DATABASE
  
-def load_sch(sch_database_file,search_history_folder=None,grace_period=0):
+def load_sch(sch_database_file,search_history_folder=None):
     
     # load SCH database
     usecols = [0,1,11,12,13,14,15]
@@ -62,12 +62,6 @@ def load_sch(sch_database_file,search_history_folder=None,grace_period=0):
     df_sch = df_sch.merge(df_nome_comercial,how='left')
     df_sch = df_sch.fillna('')
     
-    # filter products certifieds before grace period
-    if grace_period > 0:
-        certification_date_limit = datetime.today().date() - timedelta(days=grace_period)
-        certification_date_limit = certification_date_limit.strftime('%Y-%m-%d')
-        df_sch = df_sch[df_sch['Data da Homologação']<=certification_date_limit]
-
     # load search history
     if search_history_folder is not None:
         if isinstance(search_history_folder, str):

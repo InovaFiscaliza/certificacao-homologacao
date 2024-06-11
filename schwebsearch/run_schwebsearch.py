@@ -1,8 +1,10 @@
 import argparse
 import configparser
 import pandas as pd
-from pathlib import Path
 import os.path as osp
+
+from datetime import datetime, timedelta
+from pathlib import Path
 from tqdm.auto import tqdm
 
 from schwebsearch import load_sch, SCHWebSearch, parse_result_file, save_annotation_file
@@ -39,23 +41,30 @@ if __name__ == '__main__':
         print('Config file not found. Execution aborted.')
             
     # load sch database    
-    df_sch = load_sch(sch_database_file,parsed_results_folder,grace_period=grace_period)    
+    df_sch = load_sch(sch_database_file,parsed_results_folder)    
     # remove searched items
     df_sch = df_sch[df_sch['Última Pesquisa']==-1]
+    
+    # filter products certifieds before grace period
+    if grace_period > 0:
+        certification_date_limit = datetime.today().date() - timedelta(days=grace_period)
+        certification_date_limit = certification_date_limit.strftime('%Y-%m-%d')
+        df_sch = df_sch[df_sch['Data da Homologação']<=certification_date_limit]
+    
     # new items to search
     items_to_search = df_sch['Número de Homologação'].head(total_itens_to_query).to_list()
     
     sch = SCHWebSearch(search_results_folder)
     
-    for i, item in enumerate(items_to_search):
-        response_code, file_name = sch.google_search(item)
-        if verbose:
-            print(i, response_code, file_name)
-        # 403 Client Error: Quota Exceeded for url
-        # 429 Client Error: Too Many Requests for url 
-        if response_code in [403, 429]:
-            print('Exiting: search quota exceeded')
-            break
+    # for i, item in enumerate(items_to_search):
+    #     response_code, file_name = sch.google_search(item)
+    #     if verbose:
+    #         print(i, response_code, file_name)
+    #     # 403 Client Error: Quota Exceeded for url
+    #     # 429 Client Error: Too Many Requests for url 
+    #     if response_code in [403, 429]:
+    #         print('Exiting: search quota exceeded')
+    #         break
     
     # disable Bing search: search quota exceeded until 2024-06-24
     # for i, item in enumerate(items_to_search):
