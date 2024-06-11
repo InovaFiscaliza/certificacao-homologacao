@@ -276,12 +276,12 @@ def parse_result_file(file, search_history_folder=None, parse_errors_folder=None
         with open(file) as f:
             results = json.load(f)
         # move parsed result file
-        # if move_file:
-        #     file.rename(parsed_file)
+        if move_file:
+            file.rename(parsed_file)
     except:
         # move parsed error file
-        # if move_file:
-            # file.rename(error_file)
+        if move_file:
+            file.rename(error_file)
         return EMPTY_RESULT
 
     try:
