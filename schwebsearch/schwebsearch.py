@@ -23,17 +23,19 @@ RESULT_TS_FORMAT = '%Y%m%d%H%M%S%f'
 # time format for wordcloud files
 ANNOTATION_TS_FORMAT = '%d/%m/%Y %H:%M:%S'
 ANOTATION_FILE_TS_FORMAT = '%Y.%m.%d_T%H.%M.%S'
+# UUID4 regex validation pattern
+UUID4RE = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}',re.I)
 
  #%% SCH DATABASE
  
-def load_sch(sch_database_file,parsed_results_folder=None,grace_period=0):
+def load_sch(sch_database_file,search_history_folder=None,grace_period=0):
     
     # load SCH database
     usecols = [0,1,11,12,13,14,15]
     dtype = {'Número de Homologação': 'str'}
     parse_dates = [0]
     date_format = '%d/%m/%Y'
-    
+
     df_sch = pd.read_csv(
         sch_database_file,
         sep=';',
@@ -42,10 +44,23 @@ def load_sch(sch_database_file,parsed_results_folder=None,grace_period=0):
         parse_dates=parse_dates,
         date_format=date_format
         )
-    
+
     df_sch = df_sch[df_sch['Categoria do Produto']==2]
     df_sch = df_sch.sort_values(by='Data da Homologação',ascending=False)
+
+    df_modelo = df_sch[['Número de Homologação','Modelo']].dropna()
+    df_modelo = df_modelo.groupby('Número de Homologação',as_index=False)['Modelo'].apply(lambda x: ' | '.join(x))
+
+    df_nome_comercial = df_sch[['Número de Homologação','Nome Comercial']].dropna()
+    df_nome_comercial = df_nome_comercial.groupby('Número de Homologação',as_index=False)['Nome Comercial'].apply(lambda x: ' | '.join(x))
+
+    columns_to_keep = ['Data da Homologação', 'Número de Homologação', 'Nome do Fabricante', 'Categoria do Produto', 'Tipo do Produto']
+    df_sch = df_sch[columns_to_keep]
     df_sch = df_sch.drop_duplicates(subset='Número de Homologação')
+
+    df_sch = df_sch.merge(df_modelo,how='left')
+    df_sch = df_sch.merge(df_nome_comercial,how='left')
+    df_sch = df_sch.fillna('')
     
     # filter products certifieds before grace period
     if grace_period > 0:
@@ -54,23 +69,39 @@ def load_sch(sch_database_file,parsed_results_folder=None,grace_period=0):
         df_sch = df_sch[df_sch['Data da Homologação']<=certification_date_limit]
 
     # load search history
-    if parsed_results_folder is not None:
-        results_files = list(Path(parsed_results_folder).glob('*.json'))
-        search_history = []
-        for file in results_files:
-            search_date, _ , search_term, _, _ = re.split('[_.]',file.name)
-            search_date = datetime.strptime(search_date,RESULT_TS_FORMAT).date()
-            search_history.append([search_term,search_date])
-            
-        columns = ['Número de Homologação', 'Última Pesquisa']
-        df_search_history = pd.DataFrame(search_history,columns=columns)
-        df_search_history = df_search_history.sort_values(by=columns,ascending=[True,False])
-        df_search_history = df_search_history.drop_duplicates(subset='Número de Homologação')
+    if search_history_folder is not None:
+        if isinstance(search_history_folder, str):
+            search_history_folder = Path(search_history_folder)
 
-        # merge both dataframes
-        df_sch = df_sch.merge(df_search_history,how='left').fillna(-1)
+        search_history = []
+        search_history_files = [file for file in search_history_folder.glob('*.json') if re.search(UUID4RE,file.name)]           
+        if len(search_history_files) > 0:
+            for file in search_history_files:
+                search_date, search_engine, search_term, search_id, _ = re.split('[_.]',file.name)
+                search_date = datetime.strptime(search_date,RESULT_TS_FORMAT).date()
+                search_metadata = {'Última Pesquisa': search_date, 
+                                'Mecanismo de Busca': search_engine,
+                                'Id de Busca': search_id, 
+                                'Número de Homologação': search_term}
+                search_history.append(search_metadata)
+            df_search_history = pd.DataFrame(search_history)
+            
+            # merge sch and search history dataframes
+            df_sch = df_sch.merge(df_search_history, how='left')
+            columns_to_fill = ['Última Pesquisa', 'Mecanismo de Busca', 'Id de Busca']
+            df_sch[columns_to_fill] = df_sch[columns_to_fill].fillna(-1)
+            
+        # no files in search history folder    
+        else:
+            df_sch['Última Pesquisa'] = -1
+            df_sch['Mecanismo de Busca'] = -1
+            df_sch['Id de Busca'] = -1
+            
+    # no search history folder
     else:
         df_sch['Última Pesquisa'] = -1
+        df_sch['Mecanismo de Busca'] = -1
+        df_sch['Id de Busca'] = -1
           
     df_sch = df_sch.reset_index(drop=True)
     
@@ -227,7 +258,8 @@ def parse_result_file(file, parsed_results_folder=None, error_results_folder=Non
     if not parsed_results_folder.exists():
         parsed_results_folder.mkdir(parents=True, exist_ok=True)
     # set parsed results file
-    parsed_file = parsed_results_folder / f'{file.stem}_{search_result_id}{file.suffix}'
+    # parsed_file = parsed_results_folder / f'{file.stem}_{search_result_id}{file.suffix}'
+    parsed_file = parsed_results_folder / file.name
     
     # check error results folder and file
     # if parse error folder wasn't declared set default
@@ -237,7 +269,8 @@ def parse_result_file(file, parsed_results_folder=None, error_results_folder=Non
     if not error_results_folder.exists():
         error_results_folder.mkdir(parents=True, exist_ok=True)
     # set parsed results file
-    error_file = error_results_folder / f'{file.stem}_{search_result_id}{file.suffix}'
+    # error_file = error_results_folder / f'{file.stem}_{search_result_id}{file.suffix}'
+    error_file = error_results_folder / file.name
     
     search_date, search_engine, search_term, _ = re.split('[_.]',file.name)
     search_site = None
