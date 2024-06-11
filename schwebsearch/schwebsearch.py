@@ -170,7 +170,7 @@ class SCHWebSearch(object):
 
 #%% ANNOTATION
 
-def tokenizer(doc,normalize_words=True):
+def tokenizer(doc,normalize_words=False):
 
     stop_words = stopwords.words('portuguese')
     stop_words.extend(stopwords.words('english'))
