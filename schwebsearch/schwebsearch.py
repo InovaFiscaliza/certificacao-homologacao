@@ -383,10 +383,10 @@ def save_annotation_file(df, annotation_folder, actual_annotation_file=None):
             print(f'Annotation file saved: {annotation_file}')
         except Exception as ex:
             print(f'Annotation file not saved: {annotation_file}')
-            raise ex
-        return 0
+            return -1, ex
+        return 0, annotation_file
     
     else:
         print('No new annotation to save')
-        return -1
+        return 1, None
 
