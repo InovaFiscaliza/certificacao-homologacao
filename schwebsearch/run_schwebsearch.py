@@ -30,7 +30,7 @@ if __name__ == '__main__':
             config.read('websearch_config.ini')
             sch_database_file = Path(config['SCHWEBSEARCH']['sch_database_file'])
             search_results_folder = Path(config['SCHWEBSEARCH']['search_results_folder'])
-            parsed_results_folder = Path(config['SCHWEBSEARCH']['parsed_results_folder'])
+            search_history_folder = Path(config['SCHWEBSEARCH']['search_history_folder'])
             error_results_folder = Path(config['SCHWEBSEARCH']['error_results_folder'])
             annotation_folder = Path(config['SCHWEBSEARCH']['annotation_folder'])
             print('success.')
@@ -41,7 +41,7 @@ if __name__ == '__main__':
         print('Config file not found. Execution aborted.')
             
     # load sch database    
-    df_sch = load_sch(sch_database_file,parsed_results_folder)    
+    df_sch = load_sch(sch_database_file,search_history_folder)    
     # remove searched items
     df_sch = df_sch[df_sch['Última Pesquisa']==-1]
     
@@ -53,18 +53,19 @@ if __name__ == '__main__':
     
     # new items to search
     items_to_search = df_sch['Número de Homologação'].head(total_itens_to_query).to_list()
+    print(items_to_search)
     
     sch = SCHWebSearch(search_results_folder)
     
-    # for i, item in enumerate(items_to_search):
-    #     response_code, file_name = sch.google_search(item)
-    #     if verbose:
-    #         print(i, response_code, file_name)
-    #     # 403 Client Error: Quota Exceeded for url
-    #     # 429 Client Error: Too Many Requests for url 
-    #     if response_code in [403, 429]:
-    #         print('Exiting: search quota exceeded')
-    #         break
+    for i, item in enumerate(items_to_search):
+        response_code, file_name = sch.google_search(item)
+        if verbose:
+            print(i, response_code, file_name)
+        # 403 Client Error: Quota Exceeded for url
+        # 429 Client Error: Too Many Requests for url 
+        if response_code in [403, 429]:
+            print('Exiting: search quota exceeded')
+            break
     
     # disable Bing search: search quota exceeded until 2024-06-24
     # for i, item in enumerate(items_to_search):
@@ -82,16 +83,17 @@ if __name__ == '__main__':
     if verbose:
         print('Creating annotation file:')
         results = [parse_result_file(file,
-                                     parsed_results_folder=parsed_results_folder,
+                                     search_history_folder=search_history_folder,
                                      error_results_folder=error_results_folder) 
                    for file in tqdm(search_results_files)]
     else:
         results = [parse_result_file(file,
-                                     parsed_results_folder=parsed_results_folder,
+                                     search_history_folder=search_history_folder,
                                      error_results_folder=error_results_folder) 
                    for file in search_results_files]
     
     df_results = pd.DataFrame(results)
+    
     if not df_results.empty:
         df_results = df_results[df_results['Situação']==1]
         save_annotation_file(df_results,annotation_folder)
@@ -99,4 +101,5 @@ if __name__ == '__main__':
     if verbose:
         print('Pressione ENTER para sair...')
         _ = input()
+    
     
