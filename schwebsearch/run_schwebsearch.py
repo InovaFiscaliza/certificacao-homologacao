@@ -45,12 +45,14 @@ if __name__ == '__main__':
             search_history_folder = Path(config['SCHWEBSEARCH']['search_history_folder'])
             error_results_folder = Path(config['SCHWEBSEARCH']['error_results_folder'])
             annotation_folder = Path(config['SCHWEBSEARCH']['annotation_folder'])
+            actual_annotation_file = Path(config['SCHWEBSEARCH']['actual_annotation_file'])
             
             logger.info(f'  sch_database_file: {sch_database_file}')
             logger.info(f'  search_results_folder: {search_results_folder}')
             logger.info(f'  search_history_folder: {search_history_folder}')
             logger.info(f'  error_results_folder: {error_results_folder}')
             logger.info(f'  annotation_folder: {annotation_folder}')
+            logger.info(f'  actual_annotation_file: {actual_annotation_file}')
             
             logger.info('Success reading config file')
         except:
@@ -59,23 +61,25 @@ if __name__ == '__main__':
             exit(-1)
     else:
         logger.info('Config file not found. Execution aborted.')
+        
     # load sch database    
-    df_sch = load_sch(sch_database_file,search_history_folder)    
-    # remove searched items
+    df_sch = load_sch(sch_database_file,search_history_folder)
+    # remove previously searched items
     df_sch = df_sch[df_sch['Última Pesquisa']==-1]
     
-    # filter products certifieds before grace period
+    # filter products certified before grace period
     if grace_period > 0:
         certification_date_limit = datetime.today().date() - timedelta(days=grace_period)
         certification_date_limit = certification_date_limit.strftime('%Y-%m-%d')
         df_sch = df_sch[df_sch['Data da Homologação']<=certification_date_limit]
     
     # new items to search
-    items_to_search = df_sch['Número de Homologação'].head(total_itens_to_query).to_list()
+    items_to_google_search = df_sch['Número de Homologação'].iloc[:total_itens_to_query].to_list()
+    items_to_bing_search = df_sch['Número de Homologação'].iloc[total_itens_to_query:total_itens_to_query*2].to_list()
     
     sch = SCHWebSearch(search_results_folder)
     
-    for i, item in enumerate(items_to_search):
+    for i, item in enumerate(items_to_google_search):
         response_code, file_name = sch.google_search(item)
         logger.info(f'Searching item: {item}')
         logger.info(f'  Response code: {response_code}')
@@ -90,7 +94,7 @@ if __name__ == '__main__':
             break
     
     # disable Bing search: search quota exceeded until 2024-06-24
-    # for i, item in enumerate(items_to_search):
+    # for i, item in enumerate(items_to_bing_search):
     #     response_code, file_name = sch.bing_search(item)
     #     if verbose:
     #         print(i, response_code, file_name)
@@ -120,7 +124,7 @@ if __name__ == '__main__':
     
     if not df_results.empty:
         df_results = df_results[df_results['Situação']==1]
-        status, annotation_file = save_annotation_file(df_results,annotation_folder)
+        status, annotation_file = save_annotation_file(df_results,annotation_folder,actual_annotation_file)
         if status==0:
             logger.info(f'Annotation file saved: {annotation_file}')
         elif status==1:
