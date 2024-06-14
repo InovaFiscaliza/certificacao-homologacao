@@ -94,16 +94,19 @@ if __name__ == '__main__':
             break
     
     # disable Bing search: search quota exceeded until 2024-06-24
-    # for i, item in enumerate(items_to_bing_search):
-    #     response_code, file_name = sch.bing_search(item)
-    #     if verbose:
-    #         print(i, response_code, file_name)
-    #     # 403 Client Error: Quota Exceeded for url
-    #     # 429 Client Error: Too Many Requests for url 
-    #     if response_code in [403, 429]:
-    #         print('Exiting: search quota exceeded')
-            # logger.info('Exiting: Bing search quota exceeded')
-    #         break
+    for i, item in enumerate(items_to_bing_search):
+        response_code, file_name = sch.bing_search(item)
+        logger.info(f'Searching item: {item}')
+        logger.info(f'  Response code: {response_code}')
+        logger.info(f'  File saved: {file_name}')
+        if verbose:
+            print(i, response_code, file_name)
+        # 403 Client Error: Quota Exceeded for url
+        # 429 Client Error: Too Many Requests for url 
+        if response_code in [403, 429]:
+            print('Exiting: search quota exceeded')
+            logger.info('Exiting: Bing search quota exceeded')
+            break
            
     search_results_files = list(search_results_folder.glob('*.json'))
     
