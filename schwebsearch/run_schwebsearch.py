@@ -61,6 +61,7 @@ if __name__ == '__main__':
             exit(-1)
     else:
         logger.info('Config file not found. Execution aborted.')
+        exit(-1)
         
     # load sch database    
     df_sch = load_sch(sch_database_file,search_history_folder)
