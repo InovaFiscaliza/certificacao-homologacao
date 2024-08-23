@@ -5,6 +5,8 @@
 creds.ini
 datasets/
 .virtual_documents/
+dev*.ipynb
+test*.ipynb
 
 
 # Byte-compiled / optimized / DLL files
